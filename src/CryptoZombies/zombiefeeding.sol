@@ -19,12 +19,15 @@ contract KittyInterface {
 
 contract ZombieFeeding is ZombieFactory {
 
-  // 1. Remove this:
-  address ckAddress = 0x06012c8cf97BEaD5deAe237070F9587f8E7A266d;
-  // 2. Change this to just a declaration:
-  KittyInterface kittyContract = KittyInterface(ckAddress);
+  KittyInterface kittyContract;
 
-  // 3. Add setKittyContractAddress method here
+  function setKittyContractAddress(address _address) external onlyOwner {
+    kittyContract = KittyInterface(_address);
+  }
+
+  function _triggerCooldown(Zombie storage _zombie) internal {
+    _zombie.readyTime = uint32(now + cooldownTime);
+  }
 
   function feedAndMultiply(uint _zombieId, uint _targetDna, string memory _species) public {
     require(msg.sender == zombieToOwner[_zombieId]);
@@ -35,6 +38,7 @@ contract ZombieFeeding is ZombieFactory {
       newDna = newDna - newDna % 100 + 99;
     }
     _createZombie("NoName", newDna);
+    _triggerCooldown(myZombie);
   }
 
   function feedOnKitty(uint _zombieId, uint _kittyId) public {
